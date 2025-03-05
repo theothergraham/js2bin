@@ -8,14 +8,39 @@ jobs:
         arch: 'linux/amd64'
         node: '20.18.0'
         ptrcompress: false
+      windows_2019:
+        imageName: 'windows-2019'
+        node: '20.18.0'
+        ptrcompress: false
 
   pool:
     vmImage: $(imageName)
   
   variables:
-    myPhaseName: $(System.PhaseName)
-    myPhaseDisplayName: $(System.PhaseDisplayName)
+    # $SYSTEM_JOBNAME - This gets us e.g. linux_amd64
+    myvar_good_jorb: $(System.JobName)
+    # $BUILD_REASON - This gets us e.g. PullRequest
+    myvar_build_reason: $(Build.Reason)
+
+    ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
+      myvar_conditional: ''
+    ${{ else }}:
+      myvar_conditional: 'hello'
 
   steps:
-  - script: env
+  - script: |
+      mkdir -p out
+      env | sort | tee out/envdump
     displayName: Environment
+    condition: contains(variables['Agent.JobName'], 'linux')
+  - script: |
+      if not exist out mkdir out
+      set >out/envdump && type out/envdump
+    displayName: Environment
+    condition: contains(variables['Agent.JobName'], 'windows')
+
+  - task: PublishPipelineArtifact@1
+    inputs:
+      targetPath: out
+      artifact: $(System.JobName)
+      publishLocation: pipeline
