@@ -28,16 +28,10 @@ jobs:
       myvar_conditional: 'hello'
 
   steps:
-  - script: |
+  - bash: |
       mkdir -p out
       env | sort | tee out/envdump
     displayName: Environment
-    condition: contains(variables['Agent.JobName'], 'linux')
-  - script: |
-      if not exist out mkdir out
-      set >out/envdump && type out/envdump
-    displayName: Environment
-    condition: contains(variables['Agent.JobName'], 'windows')
 
   - task: PublishPipelineArtifact@1
     inputs:
